@@ -12,14 +12,19 @@ io.on('connection', (socket) => {
     console.log('ユーザーが接続しました');
 
     socket.on('startShare', () => {
-        socket.broadcast.emit('offer', {
-            type: 'offer',
-            sdp: 'dummy-sdp'  // ここは実際にはSDPを生成する必要があります
-        });
+        socket.broadcast.emit('offer', socket.id);
+    });
+
+    socket.on('offer', (offer) => {
+        socket.broadcast.emit('offer', offer);
     });
 
     socket.on('answer', (answer) => {
         socket.broadcast.emit('answer', answer);
+    });
+
+    socket.on('candidate', (candidate) => {
+        socket.broadcast.emit('candidate', candidate);
     });
 
     socket.on('disconnect', () => {
@@ -29,5 +34,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`サーバーがポート ${PORT} で稼働中`);
+    console.log(`サーバーがポート${PORT}で起動しました`);
 });
