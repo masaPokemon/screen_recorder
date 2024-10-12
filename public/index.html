@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画面配信サイト</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        video { border: 1px solid black; width: 50%; }
+    </style>
+</head>
+<body>
+    <video id="video" autoplay playsinline></video>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const videoElement = document.getElementById('video');
+        const socket = io();
+
+        socket.on('offer', async (offer) => {
+            const peerConnection = new RTCPeerConnection();
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+            stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socket.emit('answer', answer);
+            
+            peerConnection.ontrack = (event) => {
+                videoElement.srcObject = event.streams[0];
+            };
+        });
+
+        async function startScreenShare() {
+            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+            videoElement.srcObject = stream;
+            socket.emit('startShare');
+        }
+
+        startScreenShare();
+    </script>
+</body>
+</html>
